@@ -1,20 +1,27 @@
-import AP2
+from ap2 import approximate_power_of_two
 import torch
 import numpy as np
 
 
-def bit_shift_tensor(tensor):
+def bit_shift_tensor(tensor: torch.tensor):
     if type(tensor) != torch.Tensor:
-        print("Bit shift function needs Tensor. Please transform")
+        raise TypeError("Bit shift function needs Tensor. Please transform")
 
-    tensor = AP2.AP2(tensor)  # calculate AP2
-    tensor_np = tensor.numpy()  # reformat cuz bit shift
+    if torch.cuda.is_available():               #tensor to gpu
+        tensor = tensor.type(torch.cuda.FloatTensor)
+    tensor = approximate_power_of_two(tensor)  # calculate AP2
+
+    if torch.cuda.is_available():           #there is two type
+        tensor_np = tensor.cpu().numpy()
+    else:
+        tensor_np = tensor.numpy()          # reformat cuz bit shift
+
     tensor_np = tensor_np.astype(np.int64)  # reformat cuz bit shift
 
     flat_tensor = tensor_np.reshape(-1)  # reshape for every various tensor. Some has 2 by 2 but
-                                         # all tensor does not have 2 by 2
+    # all tensor does not have 2 by 2
 
-    flat_bits = np.ones(flat_tensor.shape)  # make numpy array
+    flat_bits = np.zeros(flat_tensor.shape)  # make numpy array
     flat_bits = flat_bits.astype(np.int64)  # remake type
 
     for arr_len in range(len(flat_tensor)):  # calculation log2
@@ -31,6 +38,8 @@ def bit_shift_tensor(tensor):
 
 
 if __name__ == "__main__":
-    a = torch.randn(3, 3)
+    a = torch.randn(3,3)
     print(a)
+    print("a.type : {}".format(type(a)))
     print(bit_shift_tensor(a))
+    print("bit_shift_tensor.type : {}".format(type(bit_shift_tensor(a)[0])))
