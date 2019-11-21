@@ -3,6 +3,11 @@ import torch
 import numpy as np
 
 
+def extract_movement(bits: np.ndarray) -> np.ndarray:
+    movement = np.where(bits < 0, -1 * np.log(1.0 + abs(bits)), np.log2(1.0 + bits))
+    return movement
+
+
 def bit_shift_tensor(tensor: torch.tensor) -> torch.tensor:
     if type(tensor) != torch.Tensor:
         raise TypeError("Bit shift function needs Tensor. Please transform")
@@ -18,7 +23,7 @@ def bit_shift_tensor(tensor: torch.tensor) -> torch.tensor:
     # reshape for every various tensor. Some has 2 by 2 but
     # all tensor does not have 2 by 2
 
-    flat_bits = np.where(flat_tensor < 0, -1 * np.log2(1.0 + abs(flat_tensor)), np.log2(1.0 + flat_tensor))
+    flat_bits = extract_movement(flat_tensor)
     flat_bits = flat_bits.astype(np.int64)  # remake type
 
     flat_target = flat_tensor >> flat_bits  # bit shift
@@ -29,7 +34,7 @@ def bit_shift_tensor(tensor: torch.tensor) -> torch.tensor:
 
 
 if __name__ == "__main__":
-    a = torch.randn(3, 3)*10
+    a = torch.randn(3, 3) * 10
     print(a)
     print("a.type : {}".format(type(a)))
 
